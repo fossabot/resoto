@@ -1,4 +1,5 @@
-FROM mcr.microsoft.com/devcontainers/python:3.9
+ARG VARIANT=3.9
+FROM mcr.microsoft.com/devcontainers/python:{VARIANT}
 
 ENV PYTHONUNBUFFERED 1
 
