@@ -1,5 +1,5 @@
-# resoto-plugin-templates
-Resoto templates plugin
+# resoto-plugin-infrastructure-apps
+Resoto infrastructure apps plugin
 
 ## Usage
 
@@ -12,7 +12,7 @@ In `resh` execute
 and find the following section
 
 ```
-templates:
+infrastructure:
   # Enable plugin?
   enabled: false
 ```

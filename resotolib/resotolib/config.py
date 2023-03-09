@@ -156,8 +156,18 @@ class Config(metaclass=MetaConfig):
                 if reload and self.restart_required(new_config):
                     restart()
 
-            # update the global config object with the confif from the core
-            Config.running_config.data = self.with_default_config(raw_config_json)
+            def drop_deleted_props(existing: JsonElement, update: JsonElement) -> JsonElement:
+                if existing is None:
+                    return None
+                return update
+
+            # merge the raw config into the default config
+            raw_with_new_defaults = cast(
+                Json,
+                merge_json_elements(default_config_dict, raw_config_json),
+            )
+            # update the global config object with the merged config
+            Config.running_config.data = raw_with_new_defaults
             # if the raw_config was not empty, we need to set the revision too
             if new_config_revision:
                 Config.running_config.revision = new_config_revision

@@ -9,14 +9,16 @@ def read(file_name: str) -> str:
 
 
 setup(
-    name="resoto-plugin-templates",
+    name="resoto-plugin-infrastructure-apps",
     version="3.2.6",
-    description="Resoto Templates Plugin",
+    description="Resoto Infrastructure Apps Plugin",
     license="Apache 2.0",
     packages=find_packages(),
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
-    entry_points={"resoto.plugins": ["templates = resoto_plugin_templates:TemplatesPlugin"]},
+    entry_points={
+        "resoto.plugins": ["infrastructure_apps = resoto_plugin_infrastructure_apps:InfrastructureAppsPlugin"]
+    },
     include_package_data=True,
     zip_safe=False,
     install_requires=[str(requirement) for requirement in pkg_resources.parse_requirements(read("requirements.txt"))],
@@ -42,5 +44,5 @@ setup(
         "Topic :: Utilities",
     ],
     keywords="cloud security",
-    url="https://github.com/someengineering/resoto/tree/main/plugins/cleanup_expired",
+    url="https://github.com/someengineering/resoto/tree/main/plugins/infrastructure_apps",
 )
