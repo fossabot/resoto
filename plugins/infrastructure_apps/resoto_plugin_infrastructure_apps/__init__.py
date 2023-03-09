@@ -1,5 +1,5 @@
 from copy import deepcopy
-from jinja2 import Template
+from jinja2 import Environment
 from resotolib.baseplugin import BaseActionPlugin
 from resotolib.logger import log
 from resotolib.core.search import CoreGraph
@@ -17,12 +17,14 @@ class InfrastructureAppsPlugin(BaseActionPlugin):
 
     def run_app(self, cg: CoreGraph, app_name: str, app: InfrastructureApp, data: Json) -> None:
         log.debug(f"Running app {app_name}")
-        template = Template(app.template)
+        env = Environment(extensions=["jinja2.ext.do", "jinja2.ext.loopcontrols"])
+        template = env.from_string(app.template)
+        template.globals["search"] = cg.search
         rendered_app = template.render(data=data, config=app.config)
         log.debug(f"Rendered infrastructure app {app_name}: {rendered_app}")
-        commands = rendered_app.splitlines()
-        for command in commands:
-            log.debug(f"Running command: {command}")
+        for command in rendered_app.splitlines():
+            if not command or command.isspace():
+                continue
             for response in cg.execute(command):
                 log.debug(f"Response: {response}")
 
@@ -33,7 +35,7 @@ class InfrastructureAppsPlugin(BaseActionPlugin):
         message_type = message.get("message_type")
         data = message.get("data")
         for app_name, app in apps.items():
-            if message_type != app.on_event.value:
+            if message_type != app.on_event.value or not app.enabled:
                 continue
             try:
                 self.run_app(cg, app_name, app, data)
