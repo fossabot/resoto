@@ -6,7 +6,7 @@ from resoto_plugin_aws.resource.ec2 import AwsEc2Instance
 from resotolib.logger import log
 from resotolib.config import Config
 from .config import CleanupAWSAlarmsConfig
-from typing import Dict
+from resotolib.types import Json
 
 
 class CleanupAWSAlarmsPlugin(BaseActionPlugin):
@@ -22,7 +22,7 @@ class CleanupAWSAlarmsPlugin(BaseActionPlugin):
     def bootstrap(self) -> bool:
         return Config.plugin_cleanup_aws_alarms.enabled
 
-    def do_action(self, data: Dict) -> None:
+    def do_action(self, message: Json) -> None:
         cg = CoreGraph(tls_data=self.tls_data)
 
         query = "is(aws_cloudwatch_alarm) <-default,delete[0:]delete->"

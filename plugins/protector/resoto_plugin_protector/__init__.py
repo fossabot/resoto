@@ -5,7 +5,7 @@ from resotolib.baseplugin import BaseActionPlugin
 from resotolib.core.model_export import node_from_dict
 from resotolib.config import Config
 from .config import ProtectorConfig
-from typing import Dict
+from resotolib.types import Json
 
 
 class ProtectorPlugin(BaseActionPlugin):
@@ -14,7 +14,7 @@ class ProtectorPlugin(BaseActionPlugin):
     def bootstrap(self) -> bool:
         return Config.plugin_protector.enabled
 
-    def do_action(self, data: Dict) -> None:
+    def do_action(self, message: Json) -> None:
         log.info("Protector called")
         Config.plugin_protector.validate(Config.plugin_protector)
         self.config = deepcopy(Config.plugin_protector.config)

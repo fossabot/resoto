@@ -37,7 +37,7 @@ class CleanupUntaggedPlugin(BaseActionPlugin):
         reason = f"Missing one or more of required tags {required_tags}" " and age more than threshold"
         return f'search {exclusion_part} and {kinds_part} and {tags_part} and {accounts_part} | clean "{reason}"'
 
-    def do_action(self, data: Json) -> None:
+    def do_action(self, message: Json) -> None:
         log.debug("Cleanup Untagged called")
         cg = CoreGraph(tls_data=self.tls_data)
         cfg: Json = deepcopy(Config.plugin_cleanup_untagged.config)

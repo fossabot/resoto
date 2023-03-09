@@ -2,7 +2,7 @@ import time
 from abc import ABC, abstractmethod
 from enum import Enum, auto
 from threading import Thread, current_thread
-from typing import Dict, Optional, Set
+from typing import Optional, Set
 
 from prometheus_client import Counter
 
@@ -101,11 +101,11 @@ class BaseActionPlugin(ABC, Thread):
         self.tls_data = tls_data
 
     @abstractmethod
-    def do_action(self, data: Dict):
+    def do_action(self, message: Json):
         """Perform an action"""
         pass
 
-    def action_processor(self, message: Dict) -> Optional[Json]:
+    def action_processor(self, message: Json) -> Optional[Json]:
         """Process incoming action messages"""
         if not isinstance(message, dict):
             log.error(f"Invalid message: {message}")
@@ -116,9 +116,9 @@ class BaseActionPlugin(ABC, Thread):
         log.debug(f"Received message of kind {kind}, type {message_type}, data: {data}")
         if kind == "action":
             try:
-                if message_type == self.action:
+                if message_type == self.action or self.action == "all":
                     start_time = time.time()
-                    self.do_action(data)
+                    self.do_action(message)
                     run_time = int(time.time() - start_time)
                     log.debug(f"{self.action} ran for {run_time} seconds")
                 else:
@@ -160,16 +160,35 @@ class BaseActionPlugin(ABC, Thread):
         pass
 
     def go(self) -> None:
+        # todo: get these from somewhere else
+        all_actions = (
+            "pre_collect",
+            "collect",
+            "merge_outer_edges",
+            "post_collect",
+            "pre_cleanup_plan",
+            "cleanup_plan",
+            "post_cleanup_plan",
+            "pre_cleanup",
+            "cleanup",
+            "post_cleanup",
+            "pre_generate_metrics",
+            "generate_metrics",
+            "post_generate_metrics",
+        )
+        actions = (self.action) if self.action != "all" else all_actions
+        actions_to_register = {
+            action: {
+                "timeout": self.timeout,
+                "wait_for_completion": self.wait_for_completion,
+            }
+            for action in actions
+        }
         core_actions = CoreActions(
             identifier=f"{ArgumentParser.args.subscriber_id}-actions-{self.action}-{self.name}",
             resotocore_uri=resotocore.http_uri,
             resotocore_ws_uri=resotocore.ws_uri,
-            actions={
-                self.action: {
-                    "timeout": self.timeout,
-                    "wait_for_completion": self.wait_for_completion,
-                },
-            },
+            actions=actions_to_register,
             message_processor=self.action_processor,
             tls_data=self.tls_data,
         )

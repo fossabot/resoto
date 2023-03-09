@@ -5,8 +5,8 @@ from resotolib.graph import Graph
 from resotolib.baseresources import BaseVolume
 from resotolib.config import Config
 from resotolib.durations import parse_duration
+from resotolib.types import Json
 from .config import CleanupVolumesConfig
-from typing import Dict
 
 
 class CleanupVolumesPlugin(BaseActionPlugin):
@@ -21,7 +21,7 @@ class CleanupVolumesPlugin(BaseActionPlugin):
     def bootstrap(self) -> bool:
         return Config.plugin_cleanup_volumes.enabled
 
-    def do_action(self, data: Dict) -> None:
+    def do_action(self, message: Json) -> None:
         self.update_age()
         cg = CoreGraph(tls_data=self.tls_data)
         query = "is(volume) and reported.volume_status == available <-[0:]->"

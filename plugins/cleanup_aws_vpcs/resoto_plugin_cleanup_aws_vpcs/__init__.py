@@ -22,7 +22,7 @@ from resoto_plugin_aws.resource.elb import AwsElb
 from resoto_plugin_aws.resource.elbv2 import AwsAlb, AwsAlbTargetGroup
 from resotolib.config import Config
 from .config import CleanupAWSVPCsConfig
-from typing import Dict
+from resotolib.types import Json
 
 
 class CleanupAWSVPCsPlugin(BaseActionPlugin):
@@ -35,7 +35,7 @@ class CleanupAWSVPCsPlugin(BaseActionPlugin):
     def bootstrap(self) -> bool:
         return Config.plugin_cleanup_aws_vpcs.enabled
 
-    def do_action(self, data: Dict) -> None:
+    def do_action(self, message: Json) -> None:
         Config.plugin_cleanup_aws_vpcs.validate(Config.plugin_cleanup_aws_vpcs)
         self.config = deepcopy(Config.plugin_cleanup_aws_vpcs.config)
         cg = CoreGraph(tls_data=self.tls_data)

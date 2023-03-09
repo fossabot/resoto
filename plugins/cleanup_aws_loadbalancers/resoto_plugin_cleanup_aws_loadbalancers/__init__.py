@@ -9,7 +9,7 @@ from resoto_plugin_aws.resource.ec2 import AwsEc2Instance
 from resotolib.config import Config
 from .config import CleanupAWSLoadbalancersConfig
 from resotolib.durations import parse_duration
-from typing import Dict
+from resotolib.types import Json
 
 
 class CleanupAWSLoadbalancersPlugin(BaseActionPlugin):
@@ -24,7 +24,7 @@ class CleanupAWSLoadbalancersPlugin(BaseActionPlugin):
     def bootstrap(self) -> bool:
         return Config.plugin_cleanup_aws_loadbalancers.enabled
 
-    def do_action(self, data: Dict) -> None:
+    def do_action(self, message: Json) -> None:
         self.update_age()
         cg = CoreGraph(tls_data=self.tls_data)
         query = 'is(["aws_elb", "aws_alb", "aws_alb_target_group"]) <-default,delete[0:]delete->'

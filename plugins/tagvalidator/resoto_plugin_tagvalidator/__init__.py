@@ -57,7 +57,7 @@ class TagValidatorPlugin(BaseActionPlugin):
                 return max_expiration_str
         return None
 
-    def do_action(self, data: Json) -> None:
+    def do_action(self, message: Json) -> None:
         log.info("Tag Validator called")
         Config.plugin_tagvalidator.validate(Config.plugin_tagvalidator)
         cfg: Json = deepcopy(Config.plugin_tagvalidator.config)
