@@ -160,8 +160,8 @@ class BaseActionPlugin(ABC, Thread):
         pass
 
     def go(self) -> None:
-        # todo: get these from somewhere else
-        all_actions = (
+        # todo: get these dynamically
+        all_actions = {
             "pre_collect",
             "collect",
             "merge_outer_edges",
@@ -175,8 +175,8 @@ class BaseActionPlugin(ABC, Thread):
             "pre_generate_metrics",
             "generate_metrics",
             "post_generate_metrics",
-        )
-        actions = (self.action) if self.action != "all" else all_actions
+        }
+        actions = {self.action} if self.action != "all" else all_actions
         actions_to_register = {
             action: {
                 "timeout": self.timeout,
