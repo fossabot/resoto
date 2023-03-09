@@ -120,7 +120,7 @@ class BaseActionPlugin(ABC, Thread):
                     start_time = time.time()
                     self.do_action(message)
                     run_time = int(time.time() - start_time)
-                    log.debug(f"{self.action} ran for {run_time} seconds")
+                    log.debug(f"{message_type} ran for {run_time} seconds")
                 else:
                     raise ValueError(f"Unknown message type {message_type}")
             except Exception as e:
