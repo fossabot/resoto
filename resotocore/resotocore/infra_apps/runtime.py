@@ -46,6 +46,7 @@ class Runtime(ABC):
         config: Json,
         stdin: AsyncIterator[JsonElement],
         argv: List[str],
+        ctx: Any,  # CLIContext, but here we use Any to avoid circular dependency
     ) -> AsyncIterator[str]:
         """
         Generates the template for the infrastructure app. Does not execute any commands

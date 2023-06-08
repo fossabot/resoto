@@ -5027,6 +5027,7 @@ class AppsCommand(CLICommand):
                     config=app_config,
                     stdin=stdin,
                     argv=argv,
+                    ctx=ctx,
                 )
             else:
                 return runtime.execute(

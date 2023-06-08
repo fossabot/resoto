@@ -1,10 +1,11 @@
-from typing import List, AsyncIterator, Type, Optional, Any
+from typing import List, AsyncIterator, Type, Optional, Any, cast
 from resotocore.infra_apps.runtime import Runtime
 from resotocore.infra_apps.manifest import AppManifest
 from resotocore.types import Json, JsonElement
 from resotocore.ids import GraphName
 from resotocore.db.model import QueryModel
 from resotocore.cli.model import CLI, CLIContext
+from resotocore.cli.dependencies import CLIDependencies
 from resotocore.cli import NoExitArgumentParser
 from jinja2 import Environment
 import logging
@@ -14,6 +15,7 @@ from argparse import Namespace
 from resotolib.durations import parse_optional_duration
 from resotolib.asynchronous.utils import async_lines
 from pydoc import locate
+from copy import deepcopy
 
 
 log = logging.getLogger(__name__)
@@ -27,9 +29,10 @@ class LocalResotocoreAppRuntime(Runtime):
 
     def __init__(self, cli: CLI) -> None:
         self.cli = cli
-        self.dbaccess = cli.dependencies.db_access
-        self.model_handler = cli.dependencies.model_handler
-        self.template_expander = cli.dependencies.template_expander
+        dependencies = cast(CLIDependencies, cli.dependencies)
+        self.dbaccess = dependencies.db_access
+        self.model_handler = dependencies.model_handler
+        self.template_expander = dependencies.template_expander
 
     async def execute(
         self,
@@ -43,7 +46,7 @@ class LocalResotocoreAppRuntime(Runtime):
         """
         Runtime implementation that runs the app locally.
         """
-        async for line in self.generate_template(graph, manifest, config, stdin, argv):
+        async for line in self.generate_template(graph, manifest, config, stdin, argv, ctx):
             async with (await self._interpret_line(line, ctx)).stream() as streamer:
                 async for item in streamer:
                     yield item
@@ -55,6 +58,7 @@ class LocalResotocoreAppRuntime(Runtime):
         config: Json,
         stdin: AsyncIterator[JsonElement],
         argv: List[str],
+        ctx: CLIContext,
     ) -> AsyncIterator[str]:
         graphdb = self.dbaccess.get_graph_db(graph)
         env = Environment(extensions=["jinja2.ext.do", "jinja2.ext.loopcontrols"], enable_async=True)
@@ -63,10 +67,9 @@ class LocalResotocoreAppRuntime(Runtime):
         model = await self.model_handler.load_model(graph)
 
         async def perform_search(search: str) -> AsyncIterator[Json]:
-            # parse query
-            query = await self.template_expander.parse_query(search, on_section="reported")
-            async with await graphdb.search_graph_gen(QueryModel(query, model)) as ctx:
-                async for result in ctx:
+            query = await self.template_expander.parse_query(search, on_section=ctx.env.get("section", "reported"))
+            async with await graphdb.search_graph_gen(QueryModel(query, model)) as query_ctx:
+                async for result in query_ctx:
                     yield result
 
         template.globals["parse_duration"] = parse_optional_duration
@@ -74,11 +77,13 @@ class LocalResotocoreAppRuntime(Runtime):
 
         args = self._args_from_manifest(manifest, argv)
 
-        async for line in async_lines(template.generate_async(config=config, args=args, stdin=stdin)):
+        async for line in async_lines(
+            template.generate_async(config=config, args=args, stdin=stdin, env=deepcopy(ctx.env))
+        ):
             line = line.strip()
-            log.debug(f"Rendered infrastructure app line: {line}")
             if not line:
                 continue
+            log.debug(f"Rendered infrastructure app output: {line}")
             yield line
 
     def _args_from_manifest(self, manifest: AppManifest, argv: Optional[List[str]] = None) -> Namespace:
